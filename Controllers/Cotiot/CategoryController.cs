@@ -9,7 +9,7 @@ using SPPF_API.Models.COTIOT;
 
 namespace SPPF_API.Controllers_Cotiot
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class CategoryController : ControllerBase
     {

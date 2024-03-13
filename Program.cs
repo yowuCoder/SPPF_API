@@ -11,6 +11,14 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+/*builder.Services.AddDbContext<CotiotContext>((provider, options) =>
+{
+    
+    var connectionStringName = builder.Environment.IsDevelopment() ? "localDashboard" : "Dashboard";
+    var connectionString = provider.GetRequiredService<IConfiguration>().GetConnectionString(connectionStringName);
+    options.UseSqlServer(connectionString);
+});*/
+
 builder.Services.AddDbContext<CotiotContext>(options =>
    options.UseSqlServer(builder.Configuration.GetConnectionString("Dashboard")));
 builder.Services.AddCors(options =>

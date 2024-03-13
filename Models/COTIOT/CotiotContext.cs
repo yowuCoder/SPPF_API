@@ -306,7 +306,7 @@ public partial class CotiotContext : DbContext
 
             entity.ToTable("fatek_record");
 
-            entity.HasIndex(e => new { e.Adress, e.Line }, "fatek_record_adress_line_key").IsUnique();
+            entity.HasIndex(e => new { e.Adress, e.Line,e.Time }, "fatek_record_adress_line_time_key").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Adress)
