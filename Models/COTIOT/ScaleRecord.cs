@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SPPF_API.Models.COTIOT;
 
-public partial class FatekRecord
+public partial class ScaleRecord
 {
     public long Id { get; set; }
 

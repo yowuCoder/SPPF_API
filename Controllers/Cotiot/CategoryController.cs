@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SPPF_API.Models;
 using SPPF_API.Models.COTIOT;
 
 namespace SPPF_API.Controllers_Cotiot

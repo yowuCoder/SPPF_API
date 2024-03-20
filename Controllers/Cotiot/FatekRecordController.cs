@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using SPPF_API.Helper;
 using SPPF_API.Models.COTIOT;
 
 namespace SPPF_API.Controllers_Cotiot
@@ -15,6 +16,7 @@ namespace SPPF_API.Controllers_Cotiot
     public class FatekRecordController : ControllerBase
     {
         private readonly CotiotContext _context;
+        private readonly RecordHelper<FatekRecord> _RecordHelper =new ();
 
         public FatekRecordController(CotiotContext context)
         {
@@ -85,18 +87,19 @@ namespace SPPF_API.Controllers_Cotiot
             _context.FatekRecords.Add(fatekRecord);
             await _context.SaveChangesAsync();
             //  string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)+"/fatek";
-            string line = fatekRecord.Line;
-            string docPath = @$"C:\\project\\data\\fatek\\{DateTime.Now.ToString("yyyyMMdd")}\\{line}\\";
-            string json = JsonConvert.SerializeObject(fatekRecord);
-            // Append text to an existing file named "WriteLines.txt".
-            if (!Directory.Exists(docPath))
-            {
-                Directory.CreateDirectory(docPath);
-            }
-            using (StreamWriter outputFile = new StreamWriter(Path.Combine(docPath, $"fatek_{line}_{DateTime.Now.ToString("yyyyMMddHHmmss")}.txt"), true))
-            {
-                outputFile.WriteLine(json);
-            }
+            /* string line = fatekRecord.Line;
+             string docPath = @$"C:\\project\\data\\fatek\\{DateTime.Now.ToString("yyyyMMdd")}\\{line}\\";
+             string json = JsonConvert.SerializeObject(fatekRecord);
+             // Append text to an existing file named "WriteLines.txt".
+             if (!Directory.Exists(docPath))
+             {
+                 Directory.CreateDirectory(docPath);
+             }
+             using (StreamWriter outputFile = new StreamWriter(Path.Combine(docPath, $"fatek_{line}_{DateTime.Now.ToString("yyyyMMddHHmmss")}.txt"), true))
+             {
+                 outputFile.WriteLine(json);
+             }*/
+            _RecordHelper.WriteRecordsToFile("fatek",fatekRecord.Line, fatekRecord);
             return CreatedAtAction("GetFatekRecord", new { id = fatekRecord.Id }, fatekRecord);
         }
       
@@ -113,20 +116,8 @@ namespace SPPF_API.Controllers_Cotiot
             }
 
             await _context.SaveChangesAsync();
-            // string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "/fatek";
-            // string docPath = @"C:\\project\\data\\fatek\\";
-            string line = fatekRecords[0].Line;
-            string docPath = @$"C:\\project\\data\\fatek\\{DateTime.Now.ToString("yyyyMMdd")}\\{line}\\";
-            if (!Directory.Exists(docPath))
-            {
-                Directory.CreateDirectory(docPath);
-            }
-            string json = JsonConvert.SerializeObject(fatekRecords);
-            // Append text to an existing file named "WriteLines.txt".
-            using (StreamWriter outputFile = new StreamWriter(Path.Combine(docPath, $"fatek_{line}_{DateTime.Now.ToString("yyyyMMddHHmmss")}.txt"), true))
-            {
-                outputFile.WriteLine(json);
-            }
+            _RecordHelper.WriteRecordsToFile("fatek", fatekRecords[0].Line, fatekRecords);
+          
             // Return the created records. This is optional and depends on your requirement.
             return CreatedAtAction("GetFatekRecordById", new { id = fatekRecords[0].Id }, fatekRecords);
         }
