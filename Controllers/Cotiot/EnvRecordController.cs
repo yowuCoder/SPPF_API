@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SPPF_API.Helper;
 using SPPF_API.Models.COTIOT;
 
 namespace SPPF_API.Controllers_Cotiot
@@ -14,7 +15,7 @@ namespace SPPF_API.Controllers_Cotiot
     public class EnvRecordController : ControllerBase
     {
         private readonly CotiotContext _context;
-
+        private readonly RecordHelper<EnvRecord> _RecordHelper = new();
         public EnvRecordController(CotiotContext context)
         {
             _context = context;
@@ -79,10 +80,21 @@ namespace SPPF_API.Controllers_Cotiot
         {
             _context.EnvRecords.Add(envRecord);
             await _context.SaveChangesAsync();
-
+            _RecordHelper.WriteRecordsToFile("env", "env", envRecord);
             return CreatedAtAction("GetEnvRecord", new { id = envRecord.Id }, envRecord);
         }
-
+        [HttpPost("list")]
+        public async Task<ActionResult<EnvRecord>> PostEnvRecordList(List<EnvRecord> envRecords)
+        {
+            if (envRecords == null || envRecords.Count == 0)
+            {
+                return BadRequest("No EnvRecords provided.");
+            }
+            _context.EnvRecords.AddRange(envRecords);
+            await _context.SaveChangesAsync();
+            _RecordHelper.WriteRecordsToFile("env", "env", envRecords);
+            return CreatedAtAction("GetEnvRecord", new { id = envRecords[0].Id }, envRecords);
+        }
         // DELETE: api/EnvRecord/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEnvRecord(long id)
