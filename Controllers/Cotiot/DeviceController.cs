@@ -11,6 +11,13 @@ namespace SPPF_API.Controllers_Cotiot
 {
     [Route("[controller]")]
     [ApiController]
+
+    public class InputModel
+    {
+        public string Name =null!;
+        public string Group = null!;
+    }
+
     public class DeviceController : ControllerBase
     {
         private readonly CotiotContext _context;
@@ -26,7 +33,19 @@ namespace SPPF_API.Controllers_Cotiot
         {
             return await _context.Devices.ToListAsync();
         }
+        [HttpGet("getDevicesAndRecord")]
+        public async Task<ActionResult<IEnumerable<Device>>> GetDevicesAndRecord(string Group,string Name)
+        {
+            var posts = await _context.Devices
+              //  .Include(d => d.Category)
+               // .Include(d => d.AlarmSettings)
+                //.Include(d => d.EnvRecords.OrderByDescending(er => er.Time).Take(1))
+                .Where(d => d.OfficeGroup == Group && d.Category.Name == Name)
+                .OrderBy(d => d.DeviceId)
+                .ToListAsync();
 
+            return Ok(posts);
+        }
         // GET: api/Device/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Device>> GetDevice(int id)

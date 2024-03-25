@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SPPF_API.Models.COTIOT;
+namespace SPPF_API.Models.test;
 
-public partial class EnvRecord
+public partial class SpeedRecord
 {
     public long Id { get; set; }
 
-    public double Temperature { get; set; }
-
-    public double Humidity { get; set; }
+    public double Speed { get; set; }
 
     public string DeviceId { get; set; } = null!;
 
@@ -17,5 +15,5 @@ public partial class EnvRecord
 
     public DateTime CreatedAt { get; set; }
 
-  // public virtual Device Device { get; set; } = null!;
+    public virtual Device Device { get; set; } = null!;
 }

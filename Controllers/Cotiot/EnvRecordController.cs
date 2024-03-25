@@ -2,14 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Dapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using SPPF_API.Helper;
 using SPPF_API.Models.COTIOT;
 
 namespace SPPF_API.Controllers_Cotiot
 {
+    public class TemperatureData
+    {
+        public string DeviceId { get; set; } = null!;
+        public double Temperature { get; set; }
+        public double Humidity { get; set; }
+    }
+   
     [Route("[controller]")]
     [ApiController]
     public class EnvRecordController : ControllerBase
@@ -27,7 +36,75 @@ namespace SPPF_API.Controllers_Cotiot
         {
             return await _context.EnvRecords.ToListAsync();
         }
+        [HttpGet("GetLastTemperatureForEachDevice")]
+       /* public async Task<ActionResult<IEnumerable<TemperatureData>>> GetLastTemperatureForEachDevice()
+        {
+            var temperatureRecords = await _context.EnvRecords
+                .OrderByDescending(record => record.Time) // Order records by time descending
+                .GroupBy(record => record.DeviceId) // Group by device id
+                .Select(group => group.FirstOrDefault()) // Select first record from each group
+                .Select(record => new TemperatureData
+                {
+                    DeviceId = record.DeviceId,
+                    Temperature = record.Temperature,
+                    Humidity = record.Humidity
+                })
+                .ToListAsync();
 
+            return temperatureRecords;
+        }*/
+         public async Task<ActionResult<IEnumerable<TemperatureData>>> GetLastTemperatureForEachDevice()
+         {
+             var lastTemperatures = await _context.EnvRecords
+                 .GroupBy(record => record.DeviceId)
+                 .Select(group => new
+                 {
+                     DeviceId = group.Key,
+                     MaxTime = group.Max(record => record.Time)
+                 })
+                 .ToListAsync();
+
+             var temperatureRecords = new List<TemperatureData>();
+             foreach (var lastTemperature in lastTemperatures)
+             {
+                 var temperatureRecord = await _context.EnvRecords
+                     .Where(record => record.DeviceId == record.DeviceId && record.Time == lastTemperature.MaxTime)
+                     .Select(record => new TemperatureData
+                     {
+                         DeviceId = record.DeviceId,
+                         Temperature = record.Temperature,
+                         Humidity = record.Humidity
+                     })
+                     .FirstOrDefaultAsync();
+
+                 temperatureRecords.Add(temperatureRecord);
+             }
+
+             return temperatureRecords;
+         }
+        [HttpGet("getTemperatureData")]
+        public async Task<ActionResult<IEnumerable<TemperatureData>>> GetTemperatureData(string date)
+        {
+            var conn = _context.Database.GetDbConnection();
+            
+                await conn.OpenAsync();
+
+                var query = @"
+                SELECT 
+                    device_id AS DeviceId,
+                    ROUND(AVG(CAST(temperature AS FLOAT)), 0) AS Temperature,
+                    ROUND(AVG(CAST(humidity AS FLOAT)), 0) AS Humidity
+                FROM 
+                    env_record
+                WHERE 
+                    CONVERT(DATE, [time]) = @Date
+                GROUP BY 
+                    device_id;";
+
+                return (await conn.QueryAsync<TemperatureData>(query, new { Date = date })).ToList();
+
+              
+        }
         // GET: api/EnvRecord/5
         [HttpGet("{id}")]
         public async Task<ActionResult<EnvRecord>> GetEnvRecord(long id)
@@ -75,13 +152,22 @@ namespace SPPF_API.Controllers_Cotiot
 
         // POST: api/EnvRecord
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost("test")]
         public async Task<ActionResult<EnvRecord>> PostEnvRecord(EnvRecord envRecord)
         {
-            _context.EnvRecords.Add(envRecord);
-            await _context.SaveChangesAsync();
-            _RecordHelper.WriteRecordsToFile("env", "env", envRecord);
-            return CreatedAtAction("GetEnvRecord", new { id = envRecord.Id }, envRecord);
+            try
+            {
+              
+                _context.EnvRecords.Add(envRecord);
+                await _context.SaveChangesAsync();
+              //  _RecordHelper.WriteRecordsToFile("env", "env", envRecord);
+                return CreatedAtAction("GetEnvRecord", new { id = envRecord.Id }, envRecord);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+           
         }
         [HttpPost("list")]
         public async Task<ActionResult<EnvRecord>> PostEnvRecordList(List<EnvRecord> envRecords)

@@ -28,6 +28,7 @@ builder.Services.AddCors(options =>
       policy.SetIsOriginAllowed(origin => true).AllowAnyHeader().AllowAnyMethod().AllowCredentials());
 
 });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
