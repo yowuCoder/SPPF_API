@@ -1,5 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿//using Newtonsoft.Json;
 using SPPF_API.Models.COTIOT;
+using System.Text.Json;
 
 namespace SPPF_API.Helper
 {
@@ -10,8 +11,8 @@ namespace SPPF_API.Helper
         {
             //string line = GetLine(record);
             string docPath = Path.Combine(@"C:\project\data\", path, DateTime.Now.ToString("yyyyMMdd"), line);
-            string json = JsonConvert.SerializeObject(record);
-
+            //string json = JsonConvert.SerializeObject(record);
+            string json = JsonSerializer.Serialize(record);
             // Create directory if it doesn't exist
             if (!Directory.Exists(docPath))
             {
@@ -42,8 +43,8 @@ namespace SPPF_API.Helper
                 Directory.CreateDirectory(docPath);
             }
 
-            string json = JsonConvert.SerializeObject(records);
-
+            //string json = JsonConvert.SerializeObject(records);
+            string json = JsonSerializer.Serialize(records);
             string filePath = Path.Combine(docPath, $"{path}_{line}_{DateTime.Now.ToString("yyyyMMddHHmmss")}.txt");
 
             using (StreamWriter outputFile = new StreamWriter(filePath, true))

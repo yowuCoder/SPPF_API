@@ -152,7 +152,7 @@ namespace SPPF_API.Controllers_Cotiot
 
         // POST: api/EnvRecord
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost("test")]
+        [HttpPost]
         public async Task<ActionResult<EnvRecord>> PostEnvRecord(EnvRecord envRecord)
         {
             try
@@ -160,7 +160,7 @@ namespace SPPF_API.Controllers_Cotiot
               
                 _context.EnvRecords.Add(envRecord);
                 await _context.SaveChangesAsync();
-              //  _RecordHelper.WriteRecordsToFile("env", "env", envRecord);
+                _RecordHelper.WriteRecordsToFile("env", "env", envRecord);
                 return CreatedAtAction("GetEnvRecord", new { id = envRecord.Id }, envRecord);
             }
             catch (Exception ex)
