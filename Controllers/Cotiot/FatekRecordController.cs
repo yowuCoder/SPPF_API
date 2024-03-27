@@ -11,6 +11,7 @@ using SPPF_API.Models.COTIOT;
 
 namespace SPPF_API.Controllers_Cotiot
 {
+  
     [Route("[controller]")]
     [ApiController]
     public class FatekRecordController : ControllerBase
@@ -29,7 +30,19 @@ namespace SPPF_API.Controllers_Cotiot
         {
             return await _context.FatekRecords.ToListAsync();
         }
+        [HttpGet("line/{line}")]
+     
+      
+        public async Task<ActionResult<IEnumerable<FatekRecord>>> GetScaleRecordsByLine(string line)
+        {
+            var latestRecords = await _context.FatekRecords
+            .Where(x => x.Line == line &&
+                        x.CreatedAt == _context.FatekRecords
+                            .Where(y => y.Line == line)
+                            .Max(y => y.CreatedAt)).ToListAsync();
+            return latestRecords;
 
+        }
         // GET: api/FatekRecord/5
         [HttpGet("{id}")]
         public async Task<ActionResult<FatekRecord>> GetFatekRecord(long id)

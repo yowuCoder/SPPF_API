@@ -427,7 +427,9 @@ public partial class CotiotContext : DbContext
 
             entity.ToTable("scale_record");
 
-            entity.HasIndex(e => new { e.Address, e.Line, e.Time }, "scale_record_address_line_time_idx");
+            entity.HasIndex(e => new { e.Line, e.Address,  e.Time }, "scale_record_address_line_time_idx");
+
+            entity.HasIndex(e => new { e.CreatedAt, e.Line }, "scale_record_createat_line_idx");
 
             entity.HasIndex(e => new { e.Address, e.Line, e.Time }, "scale_record_address_line_time_key").IsUnique();
 

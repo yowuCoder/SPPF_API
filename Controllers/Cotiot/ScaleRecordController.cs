@@ -27,7 +27,17 @@ namespace SPPF_API.Controllers_Cotiot
         {
             return await _context.ScaleRecords.ToListAsync();
         }
-
+        [HttpGet("line/{line}")]
+        public async Task<ActionResult<IEnumerable<ScaleRecord>>> GetScaleRecordsByLine(string line)
+        {
+                   var latestRecords = await _context.ScaleRecords
+                   .Where(x => x.Line == line &&
+                               x.CreatedAt == _context.ScaleRecords
+                                   .Where(y => y.Line == line)
+                                   .Max(y => y.CreatedAt)).ToListAsync();
+            return latestRecords;
+ 
+        }
         // GET: api/ScaleRecord/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ScaleRecord>> GetScaleRecord(long id)

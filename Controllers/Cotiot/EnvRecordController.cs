@@ -89,7 +89,7 @@ namespace SPPF_API.Controllers_Cotiot
             
                 await conn.OpenAsync();
 
-                var query = @"
+               var query = @"
                 SELECT 
                     device_id AS DeviceId,
                     ROUND(AVG(CAST(temperature AS FLOAT)), 0) AS Temperature,
@@ -100,8 +100,9 @@ namespace SPPF_API.Controllers_Cotiot
                     CONVERT(DATE, [time]) = @Date
                 GROUP BY 
                     device_id;";
+          
 
-                return (await conn.QueryAsync<TemperatureData>(query, new { Date = date })).ToList();
+            return (await conn.QueryAsync<TemperatureData>(query, new { Date = date })).ToList();
 
               
         }
@@ -118,7 +119,17 @@ namespace SPPF_API.Controllers_Cotiot
 
             return envRecord;
         }
+        [HttpGet("deviceId/{deviceId}")]
+        public async Task<ActionResult<IEnumerable<EnvRecord>>> GetScaleRecordsByLine(string deviceId)
+        {
+            var latestRecords = await _context.EnvRecords
+            .Where(x => x.DeviceId == deviceId &&
+                        x.CreatedAt == _context.EnvRecords
+                            .Where(y => y.DeviceId == deviceId)
+                            .Max(y => y.CreatedAt)).ToListAsync();
+            return latestRecords;
 
+        }
         // PUT: api/EnvRecord/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
