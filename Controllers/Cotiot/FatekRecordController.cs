@@ -5,13 +5,19 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using SPPF_API.Helper;
 using SPPF_API.Models.COTIOT;
 
 namespace SPPF_API.Controllers_Cotiot
 {
   
+    public class WmvTempRecord
+    {
+        public string LowTemp { get; set; } = null!;
+        public string HighTemp1 { get; set; } = null!;
+        public string HighTemp2 { get; set; } = null!;
+        public string HighTemp3 { get; set; } = null!;
+    }
     [Route("[controller]")]
     [ApiController]
     public class FatekRecordController : ControllerBase
@@ -33,14 +39,45 @@ namespace SPPF_API.Controllers_Cotiot
         [HttpGet("line/{line}")]
      
       
-        public async Task<ActionResult<IEnumerable<FatekRecord>>> GetScaleRecordsByLine(string line)
+        public async Task<ActionResult<WmvTempRecord>> GetScaleRecordsByLine(string line)
         {
-            var latestRecords = await _context.FatekRecords
+            string converter(string val)
+            {
+                if (val == null)
+                {
+                    return "0";
+                }
+                return (Convert.ToInt32(val)/10).ToString();
+            }
+            try
+            {
+                var latestRecords = await _context.FatekRecords
             .Where(x => x.Line == line &&
                         x.CreatedAt == _context.FatekRecords
                             .Where(y => y.Line == line)
                             .Max(y => y.CreatedAt)).ToListAsync();
-            return latestRecords;
+                
+                var lowTempRecord = latestRecords.Where(x => x.Address == "42004").FirstOrDefault();
+                var highTemp1Record = latestRecords.Where(x => x.Address == "42005").FirstOrDefault();
+                var highTemp2Record = latestRecords.Where(x => x.Address == "42006").FirstOrDefault();
+                var highTemp3Record = latestRecords.Where(x => x.Address == "42007").FirstOrDefault();
+           
+                WmvTempRecord wmvTempRecord = new WmvTempRecord
+                {
+                    LowTemp = converter(lowTempRecord?.Value)??"0",
+                    HighTemp1 = converter( highTemp1Record?.Value) ?? "0",
+                    HighTemp2 = converter (highTemp2Record?.Value) ?? "0",
+                    HighTemp3 = converter(highTemp3Record?.Value) ?? "0"
+                };
+                return wmvTempRecord;
+            }
+            catch(Exception ex)
+            {
+                
+                //return 500 status code and the exception message
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+            
 
         }
         // GET: api/FatekRecord/5

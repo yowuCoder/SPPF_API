@@ -74,6 +74,33 @@ namespace SPPF_API.Controllers_Cotiot
 
         // POST: api/ConnectionStatus
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost("script")]
+        public async Task<ActionResult<ConnectionStatus>> PostConnectionStatusScript()
+        {
+            var connectionStatus = new List<ConnectionStatus>();
+            var ipArray = new string[] { 
+                "192.168.109.101", "192.168.109.102", "192.168.109.103",
+                "192.168.109.111", "192.168.109.112", "192.168.109.113",
+                "192.168.109.121", "192.168.109.122", "192.168.109.123",
+                "192.168.109.131", "192.168.109.132", "192.168.109.133",
+                "192.168.109.141", "192.168.109.142", "192.168.109.143",
+
+            };
+            foreach(var ip in ipArray)
+            {
+                connectionStatus.Add(new ConnectionStatus
+                {
+                    Name = "B½uUC1",
+                    Status = false,    
+                    Ip = ip,
+                    UpdatedAt = DateTime.Now
+                });
+            }
+            _context.ConnectionStatuses.AddRange(connectionStatus);
+            await _context.SaveChangesAsync();
+
+            return StatusCode(200);
+        }
         [HttpPost]
         public async Task<ActionResult<ConnectionStatus>> PostConnectionStatus(ConnectionStatus connectionStatus)
         {

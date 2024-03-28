@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Humanizer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,17 +11,44 @@ using SPPF_API.Models.COTIOT;
 
 namespace SPPF_API.Controllers_Cotiot
 {
+    public class ScaleValues
+    {
+      public string CurrentWeight { get; set; }=null!;
+        public string SettingWeight { get; set; } = null!;
+    }
     [Route("[controller]")]
     [ApiController]
     public class ScaleRecordController : ControllerBase
     {
         private readonly CotiotContext _context;
         private readonly RecordHelper<ScaleRecord> _RecordHelper = new();
-        public ScaleRecordController(CotiotContext context)
+        private readonly ILogger<ScaleRecordController> _logger;
+        public ScaleRecordController(CotiotContext context, ILogger<ScaleRecordController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
+        private string ConvertHexToDecimal(string hex1, string hex2)
+        {
+
+            // string hex1 = "05DC";
+            //string hex2 = "0000";
+            _logger.LogInformation($"hex1: {hex1}, hex2: {hex2}");
+            int num1 = int.Parse(hex1, System.Globalization.NumberStyles.HexNumber);
+            int num2 = int.Parse(hex2, System.Globalization.NumberStyles.HexNumber);
+
+
+            // int sum = num1 + num2;
+            string decimalValue = (Convert.ToInt32(hex2+hex1, 16)/10).ToString();
+
+            _logger.LogInformation($"decimalValueeeeeeeeeeeeeeeeeeeeee: {decimalValue}");
+
+
+
+            return decimalValue;
+        }
+     
         // GET: api/ScaleRecord
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ScaleRecord>>> GetScaleRecords()
@@ -28,15 +56,34 @@ namespace SPPF_API.Controllers_Cotiot
             return await _context.ScaleRecords.ToListAsync();
         }
         [HttpGet("line/{line}")]
-        public async Task<ActionResult<IEnumerable<ScaleRecord>>> GetScaleRecordsByLine(string line)
+        public async Task<ActionResult<ScaleValues>>GetScaleRecordsByLine(string line)
         {
-                   var latestRecords = await _context.ScaleRecords
-                   .Where(x => x.Line == line &&
-                               x.CreatedAt == _context.ScaleRecords
-                                   .Where(y => y.Line == line)
-                                   .Max(y => y.CreatedAt)).ToListAsync();
-            return latestRecords;
- 
+            try
+            {
+                var latestRecords = await _context.ScaleRecords
+             .Where(x => x.Line == line &&
+                         x.CreatedAt == _context.ScaleRecords
+                             .Where(y => y.Line == line)
+                             .Max(y => y.CreatedAt)).ToListAsync();
+
+                var nowValues = latestRecords.Where(x => x.Address == "D1800" || x.Address == "D1801").OrderBy(x=>x.Address).ToList();
+                var settingValues = latestRecords.Where(x => x.Address == "D2022" || x.Address == "D2023").OrderBy(x => x.Address).ToList();
+               
+                /* var scaleValues = new ScaleValues
+                 {
+                     NowValues = nowValues.ToList(),
+                     SettingValues = settingValues.ToList()
+                 };*/
+               var currentWeight = ConvertHexToDecimal(nowValues[0].Value, nowValues[1].Value);
+                var settingWeight =ConvertHexToDecimal(settingValues[0].Value, settingValues[1].Value);
+                return new ScaleValues { CurrentWeight = currentWeight ?? "0", SettingWeight=settingWeight ?? "0" };
+            }
+            catch (Exception ex)
+            {
+            
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+
         }
         // GET: api/ScaleRecord/5
         [HttpGet("{id}")]
